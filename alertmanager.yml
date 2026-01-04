@@ -1,0 +1,15 @@
+route:
+  receiver: default
+
+  routes:
+  - matchers:
+    - severity="automation"
+    receiver: automation-webhook
+
+receivers:
+- name: default
+
+- name: automation-webhook
+  webhook_configs:
+  - url: http://172.31.12.194:7000/remediate
+

@@ -1,0 +1,61 @@
+groups:
+- name: aiops-anomaly-alerts
+  rules:
+
+  - alert: AIOpsAnomalyWarning
+    expr: aiops_anomaly_score > 0.4
+    for: 2m
+    labels:
+      severity: warning
+    annotations:
+      summary: "AIOps detected abnormal behavior (warning)"
+      description: >
+        Anomaly score has been above 0.4 for 2 minutes.
+        Indicates unusual traffic pattern.
+
+  - alert: AIOpsAnomalyCritical
+    expr: aiops_anomaly_score > 0.7
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: "AIOps detected severe anomaly"
+      description: >
+        Anomaly score exceeded 0.7.
+        High confidence abnormal behavior detected.
+
+
+  - alert: AIOpsCorrelatedIncident
+    expr: aiops_anomaly_score > 0.6 AND rate(http_request_errors_total{endpoint="/"}[5m]) > 0
+    for: 2m
+    labels:
+      severity: critical
+      service: aiops-app
+    annotations:
+      summary: "Correlated anomaly detected"
+      description: "Traffic anomaly confirmed with errors. Check dashboards for RCA."
+
+  - alert: AIOpsAutoRemediationCandidate
+    expr: |
+      (
+        aiops_anomaly_score > 0.7
+      )
+      AND
+      (
+        rate(http_request_errors_total{endpoint="/"}[5m]) > 0
+      )
+      AND
+      (
+        histogram_quantile(
+          0.95,
+          rate(http_request_duration_seconds_bucket{endpoint="/"}[5m])
+        ) < 1
+      )
+    for: 2m
+    labels:
+      severity: automation
+      action: consider
+    annotations:
+      summary: "Safe auto-remediation candidate detected"
+      description: "High-confidence anomaly with controlled latency"
+
