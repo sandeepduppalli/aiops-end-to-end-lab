@@ -1,0 +1,5 @@
+flask
+requests
+opentelemetry-sdk
+prometheus_client
+
